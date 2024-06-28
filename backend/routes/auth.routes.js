@@ -1,3 +1,4 @@
+import multer from 'multer';
 import { Router } from 'express';
 import {
   signup,
@@ -5,10 +6,11 @@ import {
   confirmUserEmail,
 } from '../controllers/auth.controllers.js';
 
-const authRoutes = Router();
+const upload = multer();
+const authRouter = Router();
 
-authRoutes.post('/register', signup);
-authRoutes.post('/login', signin);
-authRoutes.get('/confirm/:confirmationCode', confirmUserEmail);
+authRouter.post('/register', upload.single('file'), signup);
+authRouter.post('/login', signin);
+authRouter.get('/confirm/:confirmationCode', confirmUserEmail);
 
-export default authRoutes;
+export default authRouter;

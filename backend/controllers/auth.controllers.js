@@ -1,10 +1,17 @@
-import User from '../models/auth.models.js';
+import User from '../models/auth.model.js';
 import { createAccessToken } from '../middlewares/auth.middlewares.js';
 import { asyncHandler } from '../middlewares/error.middlewares.js';
 import { sendConfirmationEmail } from '../services/email.services.js';
 
 const signup = asyncHandler(async (request, response) => {
   const { fullname, email, password } = request.body;
+  console.log(request.body);
+
+  if (!fullname || !email || !password) {
+    return response.status(400).json({
+      message: 'All fields (fullname, email, password) are required.',
+    });
+  }
 
   try {
     const existingUser = await User.findOne({ email });

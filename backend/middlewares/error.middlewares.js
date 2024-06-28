@@ -10,7 +10,7 @@ const pageNotFound = (request, response, next) => {
       message: error.message,
       stack: error.stack,
     });
-    response.status(statusCode).json({ message: error.message });
+    response.status(statusCode).send({ message: error.message });
   };
   
   const asyncHandler = (controller) => {

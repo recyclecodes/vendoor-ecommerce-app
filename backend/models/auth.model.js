@@ -7,6 +7,7 @@ const UserSchema = new Schema(
     fullname: {
       type: String,
       required: [true, 'Fullname field is required.'],
+      trim: true,
     },
     email: {
       type: String,
@@ -29,7 +30,6 @@ const UserSchema = new Schema(
     confirmed: { type: Boolean, default: false },
     confirmationCode: {
       type: String,
-      unique: true,
     },
     deleted: { type: Boolean, default: false },
   },
