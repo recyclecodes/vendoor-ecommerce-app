@@ -5,14 +5,21 @@ dotenv.config();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const emailTemplate = (confirmationLink) => `
+const emailTemplate = (
+  title,
+  message,
+  actionText,
+  actionUrl,
+  includeLink,
+  footerMessage
+) => `
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Email Confirmation</title>
+    <title>${title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
         @media screen {
@@ -82,7 +89,7 @@ const emailTemplate = (confirmationLink) => `
                     <tr>
                         <td align="center" bgcolor="#ffffff" style="padding: 36px 24px 0px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; border-top: 3px solid #d4dadf;">
                             <img src="https://i.postimg.cc/zXN2P6TK/vendoor-logo.png" alt="Logo" border="0" width="60" style="display: block; width: 150px; max-width: 150px; min-width: 150px;">
-                            <h1 style="margin-top: 24px; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 48px;">Confirm Your Email Address</h1>
+                            <h1 style="margin-top: 24px; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 48px;">${title}</h1>
                         </td>
                     </tr>
                 </table>
@@ -93,7 +100,7 @@ const emailTemplate = (confirmationLink) => `
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                     <tr>
                         <td align="center" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                            <p style="margin: 0;">Tap the button below to confirm your email address. If you didn't create an account with <strong>Vendoor</strong>, you can safely delete this email.</p>
+                            <p style="margin: 0;">${message}</p>
                         </td>
                     </tr>
                     <tr>
@@ -104,7 +111,7 @@ const emailTemplate = (confirmationLink) => `
                                         <table border="0" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td align="center" bgcolor="#1a82e2" style="border-radius: 6px;">
-                                                    <a href="${confirmationLink}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">Confirm Email</a>
+                                                    <a href="${actionUrl}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">${actionText}</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -114,20 +121,32 @@ const emailTemplate = (confirmationLink) => `
                         </td>
                     </tr>
                     <tr>
-                        <td align="center" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
+                    <td align="center" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
+                    ${
+                      includeLink
+                        ? `
                             <p style="margin: 0;">If that doesn't work, copy and paste the following link in your browser:</p>
-                            <p style="margin: 0;"><a href="${confirmationLink}" target="_blank">${confirmationLink}</a></p>
+                            <p style="margin: 0;"><a href="${actionUrl}" target="_blank">${actionUrl}</a></p>
+                            `
+                        : ''
+                    }
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
         <tr>
-            <td align="center" bgcolor="#e9ecef" style="padding: 24px;">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
-                    <tr>
-                        <td align="center" bgcolor="#e9ecef" style="padding: 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 20px; color: #666;">
-                            <p style="margin: 0;">You received this email because a new account was created using this email address. If you didn't create an account, you can safely ignore and delete this email.</p>
+        <td align="center" bgcolor="#e9ecef" style="padding: 24px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+        <tr>
+        <td align="center" bgcolor="#e9ecef" style="padding: 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 20px; color: #666;">
+        ${
+          footerMessage
+            ? `
+                <p style="margin: 0;">${footerMessage}</p>
+        `
+            : ''
+        }
                         </td>
                     </tr>
                 </table>
@@ -139,22 +158,36 @@ const emailTemplate = (confirmationLink) => `
 </html>
 `;
 
-const sendConfirmationEmail = async (email, confirmationCode) => {
+const sendEmail = async (
+  email,
+  title,
+  message,
+  actionText,
+  actionUrl,
+  includeLink = true,
+  footerMessage = ''
+) => {
   try {
-    const confirmationLink = `http://localhost:${process.env.PORT}/api/v1/confirm/${confirmationCode}`;
     const emailData = {
       from: 'Vendoor <vendoor@gaserojales.tech>',
       to: [email],
-      subject: 'Please confirm your email',
-      html: emailTemplate(confirmationLink),
+      subject: title,
+      html: emailTemplate(
+        title,
+        message,
+        actionText,
+        actionUrl,
+        includeLink,
+        footerMessage
+      ),
     };
 
     await resend.emails.send(emailData);
-    console.log(`Confirmation email sent to ${email}`);
+    console.log(`Email sent to ${email}`);
   } catch (error) {
-    console.error('Error sending confirmation email:', error.message);
-    throw new Error('Failed to send confirmation email');
+    console.error('Error sending email:', error.message);
+    throw new Error('Failed to send email');
   }
 };
 
-export { sendConfirmationEmail };
+export { sendEmail };

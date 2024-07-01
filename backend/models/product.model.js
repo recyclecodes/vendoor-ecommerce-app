@@ -22,17 +22,17 @@ const productSchema = new Schema(
       required: [true, 'Product stock is required'],
       min: [0, 'Product stock must be a positive number'],
     },
-    category: {
+    categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
       required: [true, 'Product category is required'],
     },
-    size: {
+    sizeId: {
       type: Schema.Types.ObjectId,
       ref: 'Size',
       required: [true, 'Product size is required'],
     },
-    color: {
+    colorId: {
       type: Schema.Types.ObjectId,
       ref: 'Color',
       required: [true, 'Product color is required'],
