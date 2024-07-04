@@ -14,7 +14,7 @@ export const getTokenFromHeader = (request) => {
 
 export const createAccessToken = (user) => {
   const payload = { userId: user._id };
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10min' });
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '6h' });
 };
 
 export const createRefreshToken = (user) => {

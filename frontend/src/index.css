@@ -1,4 +1,48 @@
 @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-  
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Clash Display Bold";
+  src: url("./assets/fonts/ClashDisplay-Variable.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@layer components {
+  /* Typography */
+  h1 {
+    @apply font-clash-display uppercase text-5xl font-bold text-gray-950;
+  }
+  h2 {
+    @apply font-clash-display uppercase  text-3xl font-bold text-gray-950;
+  }
+
+  h3 {
+    @apply font-clash-display uppercase  text-2xl font-bold text-gray-950;
+  }
+
+  .p1-xl {
+    @apply text-xl;
+  }
+
+  .p2-lg {
+    @apply text-lg;
+  }
+
+  p {
+    @apply text-base;
+  }
+
+  .p3-sm {
+    @apply text-sm;
+  }
+
+  .label-caps-xs {
+    @apply text-xs font-bold uppercase tracking-wide;
+  }
+
+  label {
+    @apply text-sm font-semibold;
+  }
+}

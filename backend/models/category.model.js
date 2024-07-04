@@ -1,10 +1,10 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model } from "mongoose";
 
 const categorySchema = new Schema(
   {
     categoryName: {
       type: String,
-      required: [true, 'Category name is required'],
+      required: [true, "Category name is required"],
       trim: true,
     },
     deleted: {
@@ -17,6 +17,6 @@ const categorySchema = new Schema(
   }
 );
 
-const Category = model('Category', categorySchema);
+const Category = model("Category", categorySchema);
 
 export default Category;
