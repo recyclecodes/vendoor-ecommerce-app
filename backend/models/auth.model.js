@@ -62,6 +62,9 @@ const userSchema = new Schema(
         type: Date,
       },
     },
+    stripeCustomerId: {
+      type: String,
+    },
     deleted: { type: Boolean, default: false },
   },
   {

@@ -1,24 +1,38 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
 const orderSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "User ID is required."],
+      ref: 'User',
+      required: true,
     },
-    totalAmount: {
-      type: Number,
-      required: [true, "Total Amount is required."],
-    },
+    items: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'OrderDetail',
+      },
+    ],
     status: {
       type: String,
-      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
-      default: "Pending",
+      enum: ['pending', 'processing', 'paid', 'completed', 'cancelled'],
+      default: 'pending',
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    shippingFee: {
+      type: Number,
+      default: 0,
     },
     deleted: {
       type: Boolean,
       default: false,
+    },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Payment',
     },
   },
   {
@@ -26,6 +40,6 @@ const orderSchema = new Schema(
   }
 );
 
-const Order = model("Orders", orderSchema);
+const Order = model('Order', orderSchema);
 
 export default Order;

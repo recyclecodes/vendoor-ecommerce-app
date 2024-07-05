@@ -61,7 +61,7 @@ export const updateCartItemById = asyncHandler(
       const { cartItemId } = request.params;
       const { quantity } = request.body;
 
-      const cartItem = await CartItem.findById(cartItemId);
+      let cartItem = await CartItem.findById(cartItemId);
       if (!cartItem) {
         return response.status(404).json({ message: 'Cart item not found' });
       }
@@ -92,14 +92,26 @@ export const deleteCartItemById = asyncHandler(
     try {
       const { cartItemId } = request.params;
 
-      const cartItem = await CartItem.findById(cartItemId);
-      if (!cartItem) {
-        return response.status(404).json({ message: 'Cart item not found' });
+      const deletedCartItem = await CartItem.findByIdAndDelete(cartItemId);
+      if (!deletedCartItem) {
+        return response
+          .status(404)
+          .json({ message: 'Cart item not found for deletion' });
       }
 
-      await CartItem.findByIdAndDelete(cartItemId);
+      const cart = await Cart.findOneAndUpdate(
+        { _id: deletedCartItem.cartId },
+        { $pull: { items: cartItemId } },
+        { new: true }
+      );
 
-      response.status(200).json({ message: 'Cart item deleted successfully' });
+      if (!cart) {
+        return response.status(404).json({ message: 'Cart not found' });
+      }
+
+      response
+        .status(200)
+        .json({ message: 'Cart item deleted successfully', cart });
     } catch (error) {
       next(error);
     }

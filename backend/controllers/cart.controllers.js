@@ -5,11 +5,19 @@ import { asyncHandler } from '../middlewares/error.middlewares.js';
 
 export const createCart = asyncHandler(async (request, response, next) => {
   try {
-    const { userId } = request.body;
+    const userId = request.user._id;
 
     const user = await User.findById(userId);
     if (!user) {
       return response.status(404).json({ message: 'User not found' });
+    }
+
+    const existingCart = await Cart.findOne({ userId, deleted: false });
+
+    if (existingCart) {
+      return response
+        .status(400)
+        .json({ message: 'User already has an active cart' });
     }
 
     const cart = new Cart({ userId });
@@ -48,17 +56,17 @@ export const getCartByUserId = asyncHandler(async (request, response, next) => {
   }
 });
 
-export const clearCart = asyncHandler(async (req, res, next) => {
-  const { cartId } = req.params;
+export const clearCart = asyncHandler(async (request, response, next) => {
+  const { cartId } = request.params;
 
   const cart = await Cart.findById(cartId);
   if (!cart) {
-    return res.status(404).json({ message: 'Cart not found' });
+    return response.status(404).json({ message: 'Cart not found' });
   }
 
   await CartItem.deleteMany({ cartId });
   cart.items = [];
   await cart.save();
 
-  res.status(200).json({ message: 'Cart cleared' });
+  response.status(200).json({ message: 'Cart cleared' });
 });

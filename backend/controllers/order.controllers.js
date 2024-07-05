@@ -1,102 +1,114 @@
-import Order from "../models/order.model.js";
-import { asyncHandler } from "../middlewares/error.middlewares.js";
+import Order from '../models/order.model.js';
+import OrderDetail from '../models/orderdetail.model.js';
+import Cart from '../models/cart.model.js';
+import { asyncHandler } from '../middlewares/error.middlewares.js';
 
-const createOrder = asyncHandler(async (request, response) => {
+export const createOrder = asyncHandler(async (request, response, next) => {
+  const userId = request.user._id;
   try {
-    const { userId, totalAmount } = request.body;
+    const cart = await Cart.findOne({ userId }).populate({
+      path: 'items',
+      populate: {
+        path: 'productId',
+        model: 'Product',
+      },
+    });
 
-    if (!userId || !totalAmount) {
-      return response.status(400).send({ error: "All fields are required!" });
+    if (!cart || cart.items.length === 0) {
+      return response.status(400).json({ message: 'Cart is empty' });
     }
 
-    const newOrder = new Order({
+    const totalPrice = cart.items.reduce(
+      (total, item) => total + item.quantity * item.productId.price,
+      0
+    );
+
+    const order = new Order({
       userId,
-      totalAmount,
+      status: 'pending',
+      totalPrice,
+    });
+    await order.save();
+
+    const orderDetailsPromises = cart.items.map((item) => {
+      return new OrderDetail({
+        orderId: order._id,
+        productId: item.productId._id,
+        quantity: item.quantity,
+        price: item.productId.price,
+      }).save();
     });
 
-    await newOrder.save();
-    response
-      .status(201)
-      .send({ message: "New order created!", data: newOrder });
+    const orderDetails = await Promise.all(orderDetailsPromises);
+
+    order.items = orderDetails.map((detail) => detail._id);
+    await order.save();
+
+    response.status(201).json(order);
   } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({
-      message: error.message,
+    next(error);
+  }
+});
+
+export const getOrders = asyncHandler(async (request, response, next) => {
+  const userId = request.user._id;
+  try {
+    const orders = await Order.find({ userId }).populate({
+      path: 'items',
+      populate: {
+        path: 'productId',
+        model: 'Product',
+      },
     });
-  }
-});
-
-const getAllOrders = asyncHandler(async (request, response) => {
-  try {
-    const orders = await Order.find().sort({ updatedAt: -1 });
-
-    response.status(200).send({ message: "All Orders", data: orders });
+    response.json(orders);
   } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({ message: error.message });
+    next(error);
   }
 });
 
-const getOrdersByUserId = asyncHandler(async (request, response) => {
-  try {
-    const { userId } = request.params;
-    const orders = await Order.find({ userId }).sort({ updatedAt: -1 });
-    response
-      .status(200)
-      .send({ message: `All orders for user ${userId}`, data: orders });
-  } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({ message: error.message });
+export const getOrderByOrderId = asyncHandler(
+  async (request, response, next) => {
+    const { orderId } = request.params;
+    try {
+      const order = await Order.findById(orderId).populate({
+        path: 'items',
+        populate: {
+          path: 'productId',
+          model: 'Product',
+        },
+      });
+      if (!order) {
+        return response.status(404).json({ message: 'Order not found' });
+      }
+      response.json(order);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-const updateOrderStatus = asyncHandler(async (request, response) => {
-  try {
-    const { id } = request.params;
+export const updateOrderStatusByOrderId = asyncHandler(
+  async (request, response, next) => {
+    const { orderId } = request.params;
     const { status } = request.body;
 
-    const updatedOrder = await Order.findByIdAndUpdate(id, { status });
+    const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return response.status(400).json({ message: 'Invalid status value' });
+    }
 
-    response
-      .status(200)
-      .send({ message: "Order status updated!", data: updatedOrder });
-  } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({ message: error.message });
+    try {
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return response.status(404).json({ message: 'Order not found' });
+      }
+
+      order.status = status;
+      const updatedOrder = await order.save();
+
+      response.json(updatedOrder);
+    } catch (error) {
+      next(error);
+    }
   }
-});
-
-const softDeleteOrder = asyncHandler(async (request, response) => {
-  try {
-    const deleteOrder = await Order.findByIdAndUpdate(request.params.id, {
-      deleted: true,
-    });
-
-    response.status(200).send({ message: `Order deleted!`, data: deleteOrder });
-  } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({ message: error.message });
-  }
-});
-
-const restoreOrder = asyncHandler(async (request, response) => {
-  try {
-    const restored = await Order.findByIdAndUpdate(request.params.id, {
-      deleted: false,
-    });
-
-    response.status(200).send({ message: `Order restored!`, data: restored });
-  } catch (error) {
-    console.error(error.message);
-    response.status(response.statusCode).send({ message: error.message });
-  }
-});
-
-export {
-  createOrder,
-  getOrdersByUserId,
-  updateOrderStatus,
-  softDeleteOrder,
-  getAllOrders,
-  restoreOrder,
-};
+);

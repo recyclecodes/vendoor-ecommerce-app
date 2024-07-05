@@ -1,28 +1,25 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
 const orderDetailSchema = new Schema(
   {
     orderId: {
       type: Schema.Types.ObjectId,
-      ref: "Orders",
-      required: [true, "Order ID is required."],
+      ref: 'Order',
+      required: true,
     },
     productId: {
       type: Schema.Types.ObjectId,
-      ref: "Product",
-      required: [true, "Product ID is required."],
+      ref: 'Product',
+      required: true,
     },
     quantity: {
       type: Number,
-      required: [true, "Quantity is required."],
+      required: true,
+      min: 1,
     },
-    totalAmount: {
+    price: {
       type: Number,
-      required: [true, "Total Amount is required."],
-    },
-    deleted: {
-      type: Boolean,
-      default: false,
+      required: true,
     },
   },
   {
@@ -30,6 +27,6 @@ const orderDetailSchema = new Schema(
   }
 );
 
-const OrderDetail = model("Order Details", orderDetailSchema);
+const OrderDetail = model('OrderDetail', orderDetailSchema);
 
 export default OrderDetail;

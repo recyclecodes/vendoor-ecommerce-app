@@ -1,20 +1,18 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
   createOrder,
-  getOrdersByUserId,
-  getAllOrders,
-  updateOrderStatus,
-  softDeleteOrder,
-  restoreOrder,
-} from "../controllers/order.controllers.js";
+  getOrders,
+  getOrderByOrderId,
+  updateOrderStatusByOrderId,
+
+} from '../controllers/order.controllers.js';
+import { verifyAccessToken } from '../middlewares/auth.middlewares.js';
 
 const orderRoutes = Router();
 
-orderRoutes.post("/", createOrder);
-orderRoutes.get("/", getAllOrders);
-orderRoutes.get("/:userId", getOrdersByUserId);
-orderRoutes.put("/:id", updateOrderStatus);
-orderRoutes.delete("/delete/:id", softDeleteOrder);
-orderRoutes.put("/restore/:id", restoreOrder);
+orderRoutes.post('/', verifyAccessToken, createOrder);
+orderRoutes.get('/', verifyAccessToken, getOrders);
+orderRoutes.get('/:orderId', verifyAccessToken, getOrderByOrderId);
+orderRoutes.put('/status/:orderId', verifyAccessToken, updateOrderStatusByOrderId);
 
 export default orderRoutes;
